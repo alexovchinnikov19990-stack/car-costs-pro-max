@@ -1,33 +1,25 @@
-
 const Mileage = {
   add() {
-    const date = document.getElementById("mileageDate").value;
-    const value = Number(document.getElementById("mileageValue").value);
-
-    // БАГ #6 ИСПРАВЛЕН: валидация полей
-    if (!date || !value) {
-      alert("Заполните все поля пробега");
-      return;
-    }
-
-    const item = { date, value };
+    const date  = document.getElementById("mileageDate").value;
+    const value = parseFloat(document.getElementById("mileageValue").value);
+    if (!date || !value) { alert("Заполните все поля пробега"); return; }
     const list = Storage.get("mileage");
-    list.push(item);
+    list.push({ date, value });
+    list.sort((a,b) => a.date.localeCompare(b.date));
     Storage.set("mileage", list);
-    Mileage.render();
-    Analytics.update();
-
+    Mileage.render(); Analytics.update();
     document.getElementById("mileageValue").value = "";
   },
   render() {
     const list = Storage.get("mileage");
-    const el = document.getElementById("mileageList");
+    const el   = document.getElementById("mileageList");
     el.innerHTML = "";
-    list.forEach((i, idx) => {
+    [...list].reverse().forEach((i, idx) => {
+      const realIdx = list.length - 1 - idx;
       const li = document.createElement("li");
       li.innerHTML = `
         <span>${i.date} | <b>${i.value} км</b></span>
-        <button class="del-btn" onclick="Mileage.remove(${idx})">✕</button>
+        <button class="del-btn" onclick="Mileage.remove(${realIdx})">✕</button>
       `;
       el.appendChild(li);
     });
@@ -36,7 +28,6 @@ const Mileage = {
     const list = Storage.get("mileage");
     list.splice(idx, 1);
     Storage.set("mileage", list);
-    Mileage.render();
-    Analytics.update();
+    Mileage.render(); Analytics.update();
   }
 };
