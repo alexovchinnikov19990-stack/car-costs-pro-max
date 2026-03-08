@@ -10,23 +10,30 @@
 <meta name="theme-color" content="#0a84ff">
 <link rel="stylesheet" href="css/style.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
 <header>
   <img src="icon-192.png" alt="X50" class="header-icon">
   <h1>Car Costs <span>PRO MAX</span></h1>
+  <button class="remind-bell" onclick="App.show('reminders')" id="bellBtn" title="Напоминания">🔔</button>
 </header>
 
-<nav>
-  <button onclick="App.show('dashboard')" data-page="dashboard">🏠 Дашборд</button>
-  <button onclick="App.show('fuel')"      data-page="fuel">⛽ Топливо</button>
-  <button onclick="App.show('service')"   data-page="service">🔧 Сервис</button>
-  <button onclick="App.show('mileage')"   data-page="mileage">📍 Пробег</button>
-  <button onclick="App.show('costs')"     data-page="costs">💳 Прочее</button>
-  <button onclick="App.show('analytics')" data-page="analytics">📊 Аналитика</button>
-  <button onclick="Export.backup()"       class="backup-btn">💾 Backup</button>
+<nav id="mainNav">
+  <button onclick="App.show('dashboard')"  data-page="dashboard">🏠</button>
+  <button onclick="App.show('fuel')"       data-page="fuel">⛽</button>
+  <button onclick="App.show('service')"    data-page="service">🔧</button>
+  <button onclick="App.show('mileage')"    data-page="mileage">📍</button>
+  <button onclick="App.show('costs')"      data-page="costs">💳</button>
+  <button onclick="App.show('analytics')"  data-page="analytics">📊</button>
+  <button onclick="App.show('reminders')"  data-page="reminders">🔔</button>
+  <button onclick="App.show('car')"        data-page="car">🚗</button>
 </nav>
+<div id="navLabels" class="nav-labels">
+  <span>Дашборд</span><span>Топливо</span><span>Сервис</span><span>Пробег</span>
+  <span>Прочее</span><span>Аналитика</span><span>Напомин.</span><span>Авто</span>
+</div>
 
 <main>
 
@@ -34,11 +41,29 @@
 <section id="dashboard" class="page">
   <div class="page-bg" style="background-image:url('https://belgee.by/storage/thumbs/car_models/2/w1920_h1080_ghahrtympxsj0nal6uwr.png')"></div>
   <div class="page-content">
-    <h2>Общая статистика</h2>
-    <div class="cards">
+    <div class="dash-car-bar" id="dashCarBar"></div>
+
+    <h2>Статистика</h2>
+    <div class="cards" id="dashCards">
       <div class="card"><h3>Общие расходы</h3><p id="totalCost">0 ₽</p></div>
-      <div class="card"><h3>Стоимость км</h3><p id="costPerKm">0 ₽</p></div>
-      <div class="card"><h3>Общий пробег</h3><p id="totalKm">0 км</p></div>
+      <div class="card"><h3>Стоимость км</h3><p id="costPerKm">—</p></div>
+      <div class="card"><h3>Общий пробег</h3><p id="totalKm">—</p></div>
+      <div class="card"><h3>Ср. расход</h3><p id="avgConsumption">—</p></div>
+    </div>
+
+    <!-- Бюджет месяца -->
+    <div class="budget-block" id="budgetBlock"></div>
+
+    <!-- Инсайты -->
+    <div id="insights" class="insights-block"></div>
+
+    <!-- Напоминания на дашборде -->
+    <div id="dashReminders"></div>
+
+    <!-- Кнопки экспорта -->
+    <div class="export-row">
+      <button class="btn-secondary" onclick="Export.backup()">💾 JSON</button>
+      <button class="btn-secondary" onclick="Export.pdf()">📄 PDF</button>
     </div>
   </div>
 </section>
@@ -49,16 +74,18 @@
   <div class="page-content">
     <h2>⛽ Заправка</h2>
     <div class="form-card">
-      <input id="fuelDate" type="date">
-      <input id="fuelLiters" type="number" placeholder="Литры">
-      <input id="fuelPrice" type="number" placeholder="Цена за литр">
-      <input id="fuelMileage" type="number" placeholder="Пробег">
-      <select id="fuelType">
-        <option value="full">Полный бак</option>
-        <option value="part">Частичная</option>
-      </select>
+      <div class="form-row">
+        <input id="fuelDate" type="date">
+        <input id="fuelMileage" type="number" placeholder="Пробег (км)">
+      </div>
+      <div class="form-row">
+        <input id="fuelLiters" type="number" placeholder="Литры" step="0.01">
+        <input id="fuelPrice" type="number" placeholder="Цена за литр" step="0.01">
+      </div>
+      <div id="fuelCalc" class="inline-calc"></div>
       <button onclick="Fuel.add()">Добавить заправку</button>
     </div>
+    <div id="fuelStats" class="section-stats"></div>
     <ul id="fuelList"></ul>
   </div>
 </section>
@@ -69,12 +96,15 @@
   <div class="page-content">
     <h2>🔧 Сервис</h2>
     <div class="form-card">
-      <input id="serviceDate" type="date">
+      <div class="form-row">
+        <input id="serviceDate" type="date">
+        <input id="serviceMileage" type="number" placeholder="Пробег (км)">
+      </div>
       <input id="serviceName" placeholder="Описание работы">
-      <input id="serviceCost" type="number" placeholder="Стоимость">
-      <input id="serviceMileage" type="number" placeholder="Пробег">
+      <input id="serviceCost" type="number" placeholder="Стоимость (₽)" step="0.01">
       <button onclick="Service.add()">Добавить запись</button>
     </div>
+    <div id="serviceStats" class="section-stats"></div>
     <ul id="serviceList"></ul>
   </div>
 </section>
@@ -85,8 +115,10 @@
   <div class="page-content">
     <h2>📍 Пробег</h2>
     <div class="form-card">
-      <input id="mileageDate" type="date">
-      <input id="mileageValue" type="number" placeholder="Пробег (км)">
+      <div class="form-row">
+        <input id="mileageDate" type="date">
+        <input id="mileageValue" type="number" placeholder="Пробег (км)">
+      </div>
       <button onclick="Mileage.add()">Добавить запись</button>
     </div>
     <ul id="mileageList"></ul>
@@ -99,11 +131,22 @@
   <div class="page-content">
     <h2>💳 Прочие расходы</h2>
     <div class="form-card">
-      <input id="costDate" type="date">
-      <input id="costName" placeholder="Тип расхода">
-      <input id="costValue" type="number" placeholder="Сумма">
+      <div class="form-row">
+        <input id="costDate" type="date">
+        <select id="costCat">
+          <option value="Страховка">🛡 Страховка</option>
+          <option value="Налог">📋 Налог</option>
+          <option value="Штраф">🚨 Штраф</option>
+          <option value="Парковка">🅿️ Парковка</option>
+          <option value="Мойка">🚿 Мойка</option>
+          <option value="Прочее">📦 Прочее</option>
+        </select>
+      </div>
+      <input id="costName" placeholder="Описание (опционально)">
+      <input id="costValue" type="number" placeholder="Сумма (₽)" step="0.01">
       <button onclick="Costs.add()">Добавить расход</button>
     </div>
+    <div id="costsStats" class="section-stats"></div>
     <ul id="costList"></ul>
   </div>
 </section>
@@ -118,9 +161,76 @@
       <canvas id="structureChart"></canvas>
     </div>
     <div class="chart-card">
-      <h3>Топливо по месяцам</h3>
-      <canvas id="fuelMonthlyChart"></canvas>
+      <div class="chart-header">
+        <h3>Расход топлива (л/100км)</h3>
+        <select id="consumPeriodSel" onchange="Analytics.onPeriodChange()">
+          <option value="all">Весь период</option>
+        </select>
+      </div>
+      <canvas id="consumptionChart"></canvas>
     </div>
+    <div class="chart-card">
+      <h3>Динамика цены топлива</h3>
+      <canvas id="fuelPriceChart"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>Расходы по месяцам</h3>
+      <canvas id="monthlyTotalChart"></canvas>
+    </div>
+  </div>
+</section>
+
+<!-- REMINDERS -->
+<section id="reminders" class="page hidden">
+  <div class="page-bg" style="background-image:url('https://belgee.by/storage/thumbs/car_models/2/w1920_h1070_17622583892as-0618.jpg')"></div>
+  <div class="page-content">
+    <h2>🔔 Напоминания</h2>
+    <div class="form-card">
+      <input id="remTitle"   placeholder="Название (ТО, страховка, налог…)">
+      <div class="form-row">
+        <input id="remDate"  type="date" title="Дата напоминания">
+        <input id="remMileage" type="number" placeholder="Пробег (км, опц.)">
+      </div>
+      <select id="remType">
+        <option value="Плановое ТО">🔧 Плановое ТО</option>
+        <option value="Страховка">🛡 Страховка</option>
+        <option value="Налог">📋 Налог</option>
+        <option value="Шины">🔄 Шины</option>
+        <option value="Техосмотр">📋 Техосмотр</option>
+        <option value="Другое">📌 Другое</option>
+      </select>
+      <button onclick="Reminders.add()">Добавить напоминание</button>
+    </div>
+    <ul id="reminderList"></ul>
+  </div>
+</section>
+
+<!-- CAR -->
+<section id="car" class="page hidden">
+  <div class="page-bg" style="background-image:url('https://belgee.by/storage/thumbs/car_models/2/w1760_h880_17622583892as-0616.jpg')"></div>
+  <div class="page-content">
+    <h2>🚗 Мой автомобиль</h2>
+    <div class="form-card">
+      <input id="carMake"  placeholder="Марка и модель (Belgee X50)">
+      <div class="form-row">
+        <input id="carYear" type="number" placeholder="Год выпуска" min="1990" max="2030">
+        <input id="carColor" placeholder="Цвет">
+      </div>
+      <div class="form-row">
+        <input id="carFuel" placeholder="Тип топлива (АИ-95)">
+        <input id="carEngine" placeholder="Объём (1.5T)">
+      </div>
+      <div class="form-row">
+        <input id="carInitMileage" type="number" placeholder="Пробег при покупке (км)">
+        <input id="carBuyDate" type="date" title="Дата покупки">
+      </div>
+      <input id="carNorm" type="number" placeholder="Норм. расход (л/100км)" step="0.1">
+      <div class="form-row budget-row">
+        <input id="budgetMonth" type="number" placeholder="Бюджет в месяц (₽)" step="100">
+      </div>
+      <button onclick="CarProfile.save()">💾 Сохранить</button>
+    </div>
+    <div id="carCard" class="car-card-preview"></div>
   </div>
 </section>
 
@@ -133,7 +243,8 @@
 <script src="js/modules/mileage.js"></script>
 <script src="js/modules/costs.js"></script>
 <script src="js/modules/analytics.js"></script>
+<script src="js/modules/reminders.js"></script>
+<script src="js/modules/carprofile.js"></script>
 <script src="js/modules/export.js"></script>
-
 </body>
 </html>
