@@ -1,0 +1,97 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Car Costs PRO MAX</title>
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<header><h1>Car Costs PRO MAX</h1></header>
+
+<nav>
+<button onclick="App.show('dashboard')">Дашборд</button>
+<button onclick="App.show('fuel')">Топливо</button>
+<button onclick="App.show('service')">Сервис</button>
+<button onclick="App.show('mileage')">Пробег</button>
+<button onclick="App.show('costs')">Прочее</button>
+<button onclick="App.show('analytics')">Аналитика</button>
+<button onclick="Export.backup()">Backup</button>
+</nav>
+
+<main>
+
+<section id="dashboard" class="page">
+<h2>Общая статистика</h2>
+<div class="cards">
+<div class="card"><h3>Общие расходы</h3><p id="totalCost">0</p></div>
+<div class="card"><h3>Стоимость км</h3><p id="costPerKm">0</p></div>
+<div class="card"><h3>Общий пробег</h3><p id="totalKm">0</p></div>
+</div>
+</section>
+
+<section id="fuel" class="page hidden">
+<h2>Заправка</h2>
+<input id="fuelDate" type="date">
+<input id="fuelLiters" placeholder="Литры">
+<input id="fuelPrice" placeholder="Цена за литр">
+<input id="fuelMileage" placeholder="Пробег">
+<select id="fuelType">
+<option value="full">Полный бак</option>
+<option value="part">Частичная</option>
+</select>
+<button onclick="Fuel.add()">Добавить</button>
+<ul id="fuelList"></ul>
+</section>
+
+<section id="service" class="page hidden">
+<h2>Сервис</h2>
+<input id="serviceDate" type="date">
+<input id="serviceName" placeholder="Работа">
+<input id="serviceCost" placeholder="Стоимость">
+<input id="serviceMileage" placeholder="Пробег">
+<button onclick="Service.add()">Добавить</button>
+<ul id="serviceList"></ul>
+</section>
+
+<section id="mileage" class="page hidden">
+<h2>Пробег</h2>
+<input id="mileageDate" type="date">
+<input id="mileageValue" placeholder="Пробег">
+<button onclick="Mileage.add()">Добавить</button>
+<ul id="mileageList"></ul>
+</section>
+
+<section id="costs" class="page hidden">
+<h2>Прочие расходы</h2>
+<input id="costDate" type="date">
+<input id="costName" placeholder="Тип расхода">
+<input id="costValue" placeholder="Сумма">
+<button onclick="Costs.add()">Добавить</button>
+<ul id="costList"></ul>
+</section>
+
+<section id="analytics" class="page hidden">
+<h2>Аналитика</h2>
+<canvas id="structureChart"></canvas>
+<br>
+<canvas id="fuelMonthlyChart"></canvas>
+</section>
+
+</main>
+
+<script src="js/core/storage.js"></script>
+<script src="js/core/app.js"></script>
+<script src="js/modules/fuel.js"></script>
+<script src="js/modules/service.js"></script>
+<script src="js/modules/mileage.js"></script>
+<script src="js/modules/costs.js"></script>
+<script src="js/modules/analytics.js"></script>
+<script src="js/modules/export.js"></script>
+
+</body>
+</html>
