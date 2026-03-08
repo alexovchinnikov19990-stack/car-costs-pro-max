@@ -1,0 +1,13 @@
+
+body{font-family:-apple-system,system-ui;margin:0;background:#0f0f10;color:white}
+header{background:black;padding:16px;text-align:center}
+nav{display:flex;overflow-x:auto;background:#1c1c1e}
+nav button{flex:1;padding:12px;border:none;background:#1c1c1e;color:white}
+.page{padding:20px}
+.hidden{display:none}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{background:#1c1c1e;padding:16px;border-radius:10px;text-align:center}
+input,select,button{display:block;width:100%;margin:8px 0;padding:10px;border-radius:8px;border:none}
+button{background:#0a84ff;color:white}
+ul{list-style:none;padding:0}
+li{background:#1c1c1e;margin:6px 0;padding:10px;border-radius:8px}
